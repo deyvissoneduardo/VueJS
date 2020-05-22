@@ -4,8 +4,8 @@
           <v-file-input label="Selecione as Legendas" 
           multiple chips v-model="files"
           prepend-icon="mdi-message-text" 
-          append-icon="mdi-send"
-          @click:append-icon="processSubtitles" />
+          append-outer-icon="mdi-send"
+          @click:append-outer="processSubtitles" />
       </v-form>
       <div class="pills">
           <Pill  v-for="word in groupedWords" :key="word.name" :name="word.name" :amount="word.amount" />
@@ -14,22 +14,23 @@
 </template>
 
 <script>
+import { ipcRenderer } from 'electron'
 import Pill from './Pill'
 export default {
     components: { Pill },
     data: function(){
         return {
             files: [],
-            groupedWords: [
-                { name: 'you', amount: 900 },
-                { name: 'he', amount: 700 },
-                { name: 'it', amount: 258 }
-            ]
+            groupedWords: []
         }
     },
     methods: {
         processSubtitles(){
-            console.log(this.files)
+            const paths = this.files.map(f => f.paths)
+            ipcRenderer.send('process-subtitles', paths)
+            ipcRenderer.on('process-subtitles', (event, resp) =>{
+                this.groupedWords = resp
+            })
         }
     }
 }
